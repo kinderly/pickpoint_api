@@ -9,7 +9,7 @@ module PickpointApi
       raise PickpointApi::ApiError, ex.message
     ensure
       if session.present?
-        session.close
+        session.logout
       end
     end
   end

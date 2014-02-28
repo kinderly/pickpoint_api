@@ -28,8 +28,8 @@ class PickpointApi::Session
     end
   end
 
-  def close
-    if @session_id.present? && @state == :started
+  def logout
+    if !@session_id.nil? && @state == :started
       data = {'SessionId' => @session_id}
       response = execute_action :logout, data
       response = JSON.parse(response)
@@ -62,9 +62,10 @@ class PickpointApi::Session
     data = attach_session_id(data, 'InvoiceNumber')
     response = execute_action(:track_sending, data)
 
-    if response.blank?
+    if response.nil? || response.empty?
       return nil
     end
+
     response = JSON.parse(response)
   end
 
