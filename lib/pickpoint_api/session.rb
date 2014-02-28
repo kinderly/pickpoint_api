@@ -1,28 +1,25 @@
-class Pickpoint::Api::Session
-  attr_reader :state
+require('net/http')
+require('json')
 
-  def api_path
-    if @test
-      PickpointApiApi::Constants::API_TEST_PATH
-    else
-      PickpointApiApi::Constants::API_PROD_PATH
-    end
+class PickpointApi::Session
+  attr_reader :state
+  attr_reader :test
+
+  def initialize(hash = {})
+    @state = :new
+    @test = hash[:test] == true
   end
 
-  def initialize login, password, hash
-    @state = :new
-
-    if hash[:test] == true
-      @test = true
-    else
-      @test = false
+  def login(login, password)
+    if @state!= :new
+      return nil
     end
 
     data = {'Login' => login, 'Password' => password}
-    response = execute_action :login, data
+    response = execute_action(:login, data)
     response = JSON.parse(response)
 
-    if response['ErrorMessage'].blank? && response['SessionId'].present?
+    if response['ErrorMessage'].nil? && !response['SessionId'].nil?
       @session_id = response['SessionId']
       @state = :started
     else
@@ -48,22 +45,22 @@ class Pickpoint::Api::Session
     end
   end
 
-  def create_sending data
+  def create_sending(data)
     if @state == :started
       data = attach_session_id(data, 'Sendings')
-      response = execute_action :create_sending, data
+      response = execute_action(:create_sending, data)
       response = JSON.parse(response)
     end
   end
 
-  def track_sending invoice_id
+  def track_sending(invoice_id)
     if @state != :started
       return nil
     end
 
     data = invoice_id
     data = attach_session_id(data, 'InvoiceNumber')
-    response = execute_action :track_sending, data
+    response = execute_action(:track_sending, data)
 
     if response.blank?
       return nil
@@ -73,26 +70,26 @@ class Pickpoint::Api::Session
 
   def postamats
     if @state == :started
-      response = execute_action :postamat_list
+      response = execute_action(:postamat_list)
       response = JSON.parse(response)
     end
   end
 
-  def make_label invoice_id
+  def make_label(invoice_id)
     if @state != :started
       return nil
     end
 
-    if invoice_id.kind_of? (Array)
+    if invoice_id.kind_of?(Array)
       data = invoice_id
     elsif
       data = [invoice_id]
     end
 
     data = attach_session_id(data,'Invoices')
-    response = execute_action :make_label, data
+    response = execute_action(:make_label, data)
 
-    if response.start_with? "Error"
+    if response.start_with?("Error")
       raise ::PickpointApi::Exceptions::ApiError, response
       return nil
     else
@@ -100,21 +97,21 @@ class Pickpoint::Api::Session
     end
   end
 
-  def make_reestr invoice_id
+  def make_reestr(invoice_id)
     if @state != :started
       return nil
     end
 
-    if invoice_id.kind_of? (Array)
+    if invoice_id.kind_of?(Array)
       data = invoice_id
     elsif
       data = [invoice_id]
     end
 
     data = attach_session_id(data,'Invoices')
-    response = execute_action :make_reestr, data
+    response = execute_action(:make_reestr, data)
 
-    if response.start_with? "Error"
+    if response.start_with?("Error")
       raise ::PickpointApi::Exceptions::ApiError, response
       return nil
     else
@@ -124,7 +121,15 @@ class Pickpoint::Api::Session
 
   private
 
-  def create_request action
+  def api_path
+    if @test
+      ::PickpointApi::Constants::API_TEST_PATH
+    else
+      ::PickpointApi::Constants::API_PROD_PATH
+    end
+  end
+
+  def create_request(action)
     action_config = ::PickpointApi::Constants::ACTIONS[action]
     if action_config.nil?
       return nil
@@ -133,9 +138,9 @@ class Pickpoint::Api::Session
     action_path = "#{api_path}#{action_config[:path]}"
 
     if action_config[:method] == :post
-      req = Net::HTTP::Post.new action_path
+      req = ::Net::HTTP::Post.new action_path
     elsif action_config[:method] == :get
-      req = Net::HTTP::Get.new action_path
+      req = ::Net::HTTP::Get.new action_path
     end
 
     req.content_type = 'application/json'
@@ -143,14 +148,14 @@ class Pickpoint::Api::Session
     req
   end
 
-  def attach_session_id data, key
+  def attach_session_id(data, key)
     {
       'SessionId' => @session_id,
       key => data
     }
   end
 
-  def execute_action action, data = {}
+  def execute_action(action, data = {})
     req = create_request action
 
     if req.nil?
@@ -159,10 +164,15 @@ class Pickpoint::Api::Session
 
     req.body = data.to_json
 
-    response = Net::HTTP.start(::PickpointApi::API_HOST, ::PickpointApi::API_PORT) do |http|
-      http.request(req)
-    end
+    response = send_request(req)
 
     response.body
   end
+
+  def send_request(req)
+    ::Net::HTTP.start(::PickpointApi::API_HOST, ::PickpointApi::API_PORT) do |http|
+      http.request(req)
+    end
+  end
+
 end

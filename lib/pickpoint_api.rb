@@ -1,8 +1,9 @@
 module PickpointApi
 
-  def self.session login, password, hash
+  def self.session login, password, hash = {}
     begin
-      session = Session.new login, password, hash
+      session = Session.new hash
+      session.login login, password
       yield session
     rescue => ex
       raise PickpointApi::ApiError, ex.message
