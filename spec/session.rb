@@ -1,3 +1,5 @@
+# coding: utf-8
+
 require_relative '../lib/pickpoint_api.rb'
 require_relative './support/dummy_data.rb'
 
