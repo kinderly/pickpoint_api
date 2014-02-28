@@ -1,5 +1,5 @@
 require_relative '../lib/pickpoint_api.rb'
-require_relative './dummy_data.rb'
+require_relative './support/dummy_data.rb'
 
 include DummyData
 
