@@ -1,5 +1,7 @@
 # Pickpoint API
 
+[![Build Status](https://travis-ci.org/kinderly/pickpoint_api.png?branch=master)](https://travis-ci.org/kinderly/pickpoint_api)
+
 ## Description
 
 This gem provides a basic Ruby wrapper over [Pickpoint](http://pickpoint.ru/) API.

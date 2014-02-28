@@ -3,3 +3,4 @@ rvm:
   - 2.1.0
   - 1.9.3
   - ruby-head
+script: "rspec spec/*"
