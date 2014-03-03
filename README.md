@@ -12,7 +12,7 @@ This gem provides a basic Ruby wrapper over [Pickpoint](http://pickpoint.ru/) AP
 require('pickpoint_api')
 
 PickpointApi.session('login', 'password', test: true) do |s|
-  postamats = s.postamats
+  postamats = s.postamat_list
 
   s.create_sending(@my_sending_hash)
 
