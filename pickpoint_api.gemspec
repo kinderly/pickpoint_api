@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/kinderly/pickpoint_api"
 
   s.summary = %q{A wrapper for Pickpoint API}
-  s.description = %q{A wrapper for Pickpoint API}
+  s.description = %q{This gem provides a Ruby wrapper over Pickpoint API.}
   s.license = "MIT"
 
   s.files = `git ls-files`.split("\n")
