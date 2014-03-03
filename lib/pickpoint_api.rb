@@ -1,4 +1,16 @@
+require('logger')
+
 module PickpointApi
+  @logger = Logger.new($stdout)
+  @logger.level = Logger::INFO
+
+  def self.logger=(logger)
+    @logger = logger
+  end
+
+  def self.logger
+    @logger
+  end
 
   def self.session login, password, hash = {}
     begin
@@ -19,3 +31,4 @@ end
 require_relative('pickpoint_api/constants.rb')
 require_relative('pickpoint_api/session.rb')
 require_relative('pickpoint_api/exceptions.rb')
+

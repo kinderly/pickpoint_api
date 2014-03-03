@@ -229,6 +229,7 @@ class PickpointApi::Session
   end
 
   def execute_action(action, data = {})
+    ::PickpointApi.logger.debug("Request: action: #{action}; data: #{data.inspect}")
     req = create_request(action)
 
     if req.nil?
@@ -237,6 +238,15 @@ class PickpointApi::Session
 
     req.body = data.to_json
     response = send_request(req)
+
+    if !response.body.nil?
+      if response.body.start_with?('%PDF')
+        ::PickpointApi.logger.debug("Response: #{response.code}; data: PDF")
+      end
+        ::PickpointApi.logger.debug("Response: #{response.code}; data: #{response.body}")
+      else
+    end
+
     response.body
   end
 

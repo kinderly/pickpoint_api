@@ -1,3 +1,4 @@
+require('logger')
 require_relative '../lib/pickpoint_api.rb'
 require_relative './support/dummy_data.rb'
 require_relative './support/http_mocking.rb'
@@ -12,4 +13,15 @@ describe 'PickpointApi' do
       HttpMocking.set_next_response(LOGOUT_SUCCESSFULL)
     end
   end
+
+  it 'should write logs' do
+
+    PickpointApi.logger.level = Logger::UNKNOWN
+    PickpointApi.logger.info('INFO')
+    PickpointApi.logger.error('ERROR')
+    PickpointApi.logger.warn('WARNING')
+    PickpointApi.logger.fatal('FATAL')
+    PickpointApi.logger.debug('DEBUG')
+  end
+
 end

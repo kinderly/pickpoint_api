@@ -1,5 +1,3 @@
-# coding: utf-8
-
 require_relative '../lib/pickpoint_api.rb'
 require_relative './support/dummy_data.rb'
 require_relative './support/http_mocking.rb'
@@ -42,7 +40,7 @@ describe ::PickpointApi::Session do
   end
 
   describe '.create_sending' do
-    it 'should handle succesfull request' do
+    it 'should handle successfull request' do
       @session.login('login', 'password')
       ::HttpMocking.set_next_response(CREATE_SENDING_SUCCESSFULL)
       res = @session.create_sending(SAMPLE_SENDING_REQUEST)
@@ -52,7 +50,7 @@ describe ::PickpointApi::Session do
   end
 
   describe '.track_sending' do
-    it 'should handle succesfull request' do
+    it 'should handle successfull request' do
       @session.login('login', 'password')
       ::HttpMocking.set_next_response({}.to_json)
       res = @session.track_sending('21121312')
@@ -60,7 +58,7 @@ describe ::PickpointApi::Session do
   end
 
   describe '.postamat_list' do
-    it 'should handle succesfull request' do
+    it 'should handle successfull request' do
       @session.login('login', 'password')
       ::HttpMocking.set_next_response({}.to_json)
       @session.postamat_list
@@ -68,44 +66,84 @@ describe ::PickpointApi::Session do
   end
 
   describe '.make_label' do
-    it 'should handle succesfull request' do
+    it 'should handle successfull request' do
       @session.login('login', 'password')
-      ::HttpMocking.set_next_response('%PDF')
+      ::HttpMocking.set_next_response(PDF_SUCCESS)
       @session.make_label('12345')
     end
 
     it 'should handle multiple invoices' do
       @session.login('login', 'password')
-      ::HttpMocking.set_next_response('%PDF')
+      ::HttpMocking.set_next_response(PDF_SUCCESS)
       @session.make_label(['123123','123213'])
     end
 
     it 'should handle api error' do
       @session.login('login', 'password')
-      ::HttpMocking.set_next_response('Error: Случилось что-то ужасное')
+      ::HttpMocking.set_next_response(PDF_ERROR)
+      expect{@session.make_label(['123123'])}.to raise_error PickpointApi::Exceptions::ApiError
+    end
+  end
+
+  describe '.make_zlabel' do
+    it 'should handle successfull request' do
+      @session.login('login', 'password')
+      ::HttpMocking.set_next_response(PDF_SUCCESS)
+      @session.make_zlabel('12345')
+    end
+
+    it 'should handle multiple invoices' do
+      @session.login('login', 'password')
+      ::HttpMocking.set_next_response(PDF_SUCCESS)
+      @session.make_zlabel(['123123','123213'])
+    end
+
+    it 'should handle api error' do
+      @session.login('login', 'password')
+      ::HttpMocking.set_next_response(PDF_ERROR)
       expect{@session.make_label(['123123'])}.to raise_error PickpointApi::Exceptions::ApiError
     end
   end
 
   describe '.make_reestr' do
-    it 'should handle succesfull request' do
+    it 'should handle successfull request' do
       @session.login('login', 'password')
-      ::HttpMocking.set_next_response('%PDF')
+      ::HttpMocking.set_next_response(PDF_SUCCESS)
       @session.make_reestr('12345')
     end
 
     it 'should handle multiple invoices' do
       @session.login('login', 'password')
-      ::HttpMocking.set_next_response('%PDF')
+      ::HttpMocking.set_next_response(PDF_SUCCESS)
       @session.make_reestr(['123123','123213'])
 
     end
 
     it 'should handle api error' do
       @session.login('login', 'password')
-      ::HttpMocking.set_next_response('Error: Случилось что-то ужасное')
+      ::HttpMocking.set_next_response(PDF_ERROR)
       expect{@session.make_reestr(['123123'])}.to raise_error PickpointApi::Exceptions::ApiError
     end
   end
+
+  describe '.city_list' do
+    it 'should handle successfull request' do
+      @session.login('login', 'password')
+      ::HttpMocking.set_next_response(CITY_LIST_SUCCESS)
+      res = @session.city_list
+      expect(res.count).to eq(2)
+    end
+  end
+
+  describe '.get_states' do
+    it 'should handle successfull request' do
+      @session.login('login', 'password')
+      ::HttpMocking.set_next_response(STATES_SUCCESS)
+      res = @session.get_states
+      expect(res.count).to eq(3)
+    end
+  end
+
+
 
 end
