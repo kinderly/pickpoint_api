@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "pickpoint_api"
-  s.version = "0.0.1"
+  s.version = "0.1"
   s.authors = ["Kinderly LTD"]
   s.email = ["nuinuhin@gmail.com"]
   s.homepage = "http://github.com/kinderly/pickpoint_api"
