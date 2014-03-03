@@ -1,5 +1,6 @@
 require('net/http')
 require('json')
+require('date')
 
 class PickpointApi::Session
   attr_reader :state
@@ -98,6 +99,28 @@ class PickpointApi::Session
     end
   end
 
+  def make_zlabel(invoice_id)
+    if @state != :started
+      return nil
+    end
+
+    if invoice_id.kind_of?(Array)
+      data = invoice_id
+    elsif
+      data = [invoice_id]
+    end
+
+    data = attach_session_id(data,'Invoices')
+    response = execute_action(:make_zlabel, data)
+
+    if response.start_with?("Error")
+      raise ::PickpointApi::Exceptions::ApiError, response
+      return nil
+    else
+      return response
+    end
+  end
+
   def make_reestr(invoice_id)
     if @state != :started
       return nil
@@ -118,6 +141,55 @@ class PickpointApi::Session
     else
       return response
     end
+  end
+
+  def sending_info(invoice_id)
+    if @state != :started
+      return nil
+    end
+
+    data = attach_session_id(invoice_id, 'InvoiceNumber')
+    response = execute_action(:sending_info, data)
+
+    if(response.nil? || response.empty?)
+      return []
+    else
+      return JSON.parse(response)
+    end
+  end
+
+  def get_states
+    if @state != :started
+      return nil
+    end
+
+    response = execute_action(:get_states)
+    response = JSON.parse(response)
+  end
+
+  def city_list
+    if @state != :started
+      return nil
+    end
+
+    response = execute_action(:city_list)
+    response = JSON.parse(response)
+  end
+
+  def get_invoices_change_state(state, date_from = nil, date_to = DateTime.now)
+    data = {
+      'SessionId' => @session_id,
+      'DateTo' => date_to.strftime('%d.%m.%y'),
+      'State' => state
+    }
+
+    if !date_from.nil?
+      data['DateFrom'] = date_from.strftime('%d.%m.%y')
+    end
+
+    response = execute_action(:get_invoices_change_state, data)
+
+    JSON.parse(response)
   end
 
   private
@@ -157,16 +229,14 @@ class PickpointApi::Session
   end
 
   def execute_action(action, data = {})
-    req = create_request action
+    req = create_request(action)
 
     if req.nil?
       return nil
     end
 
     req.body = data.to_json
-
     response = send_request(req)
-
     response.body
   end
 
