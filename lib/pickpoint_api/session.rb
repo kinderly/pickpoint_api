@@ -69,7 +69,7 @@ class PickpointApi::Session
     response = JSON.parse(response)
   end
 
-  def postamats
+  def postamat_list
     if @state == :started
       response = execute_action(:postamat_list)
       response = JSON.parse(response)

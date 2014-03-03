@@ -59,11 +59,11 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.postamats' do
+  describe '.postamat_list' do
     it 'should handle succesfull request' do
       @session.login('login', 'password')
       ::HttpMocking.set_next_response({}.to_json)
-      @session.postamats
+      @session.postamat_list
     end
   end
 
