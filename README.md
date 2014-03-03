@@ -1,6 +1,7 @@
 # Pickpoint API
 
 [![Build Status](https://travis-ci.org/kinderly/pickpoint_api.png?branch=master)](https://travis-ci.org/kinderly/pickpoint_api)
+[![Gem Version](https://badge.fury.io/rb/pickpoint_api.png)](http://badge.fury.io/rb/pickpoint_api)
 
 ## Description
 
