@@ -171,7 +171,7 @@ class PickpointApi::Session
   end
 
   def send_request(req)
-    ::Net::HTTP.start(::PickpointApi::API_HOST, ::PickpointApi::API_PORT) do |http|
+    ::Net::HTTP.start(::PickpointApi::Constants::API_HOST, ::PickpointApi::Constants::API_PORT) do |http|
       http.request(req)
     end
   end

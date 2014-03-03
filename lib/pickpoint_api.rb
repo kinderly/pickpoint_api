@@ -6,9 +6,9 @@ module PickpointApi
       session.login login, password
       yield session
     rescue => ex
-      raise PickpointApi::ApiError, ex.message
+      raise ::PickpointApi::Exceptions::ApiError, ex.message
     ensure
-      if session.present?
+      if !session.nil? && session.state != :closed
         session.logout
       end
     end
