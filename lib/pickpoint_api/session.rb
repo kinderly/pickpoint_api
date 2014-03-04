@@ -11,6 +11,7 @@ class PickpointApi::Session
     @test = hash[:test] == true
   end
 
+  # Начало сессии
   def login(login, password)
     if @state!= :new
       return nil
@@ -29,6 +30,7 @@ class PickpointApi::Session
     end
   end
 
+  # Завершение сессии
   def logout
     if !@session_id.nil? && @state == :started
       data = {'SessionId' => @session_id}
@@ -46,6 +48,7 @@ class PickpointApi::Session
     end
   end
 
+  # Регистрация одноместного отправления
   def create_sending(data)
     if @state == :started
       data = attach_session_id(data, 'Sendings')
@@ -54,6 +57,7 @@ class PickpointApi::Session
     end
   end
 
+  # Мониторинг отправления
   def track_sending(invoice_id)
     if @state != :started
       return nil
@@ -70,6 +74,7 @@ class PickpointApi::Session
     response = JSON.parse(response)
   end
 
+  # Получение списка терминалов
   def postamat_list
     if @state == :started
       response = execute_action(:postamat_list)
@@ -77,6 +82,7 @@ class PickpointApi::Session
     end
   end
 
+  # Формирование этикеток в PDF
   def make_label(invoice_id)
     if @state != :started
       return nil
@@ -99,6 +105,7 @@ class PickpointApi::Session
     end
   end
 
+  # Формирование этикеток в PDF для принтера Zebra
   def make_zlabel(invoice_id)
     if @state != :started
       return nil
@@ -121,6 +128,7 @@ class PickpointApi::Session
     end
   end
 
+  # Формирование реестра по списку отправлений в PDF
   def make_reestr(invoice_id)
     if @state != :started
       return nil
@@ -143,6 +151,7 @@ class PickpointApi::Session
     end
   end
 
+  # Получени информации по отправлению
   def sending_info(invoice_id)
     if @state != :started
       return nil
@@ -158,6 +167,7 @@ class PickpointApi::Session
     end
   end
 
+  # Получение справочника статусов отправления
   def get_states
     if @state != :started
       return nil
@@ -167,6 +177,7 @@ class PickpointApi::Session
     response = JSON.parse(response)
   end
 
+  # Получение списка городов
   def city_list
     if @state != :started
       return nil
@@ -176,6 +187,7 @@ class PickpointApi::Session
     response = JSON.parse(response)
   end
 
+  # Получение списка отправлений, прошедших этап (статус)
   def get_invoices_change_state(state, date_from = nil, date_to = DateTime.now)
     data = {
       'SessionId' => @session_id,
