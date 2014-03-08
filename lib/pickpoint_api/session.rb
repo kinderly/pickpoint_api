@@ -88,12 +88,7 @@ class PickpointApi::Session
       return nil
     end
 
-    if invoice_id.kind_of?(Array)
-      data = invoice_id
-    elsif
-      data = [invoice_id]
-    end
-
+    data = make_invoice_ids(invoice_id)
     data = attach_session_id(data,'Invoices')
     response = execute_action(:make_label, data)
 
@@ -111,12 +106,7 @@ class PickpointApi::Session
       return nil
     end
 
-    if invoice_id.kind_of?(Array)
-      data = invoice_id
-    elsif
-      data = [invoice_id]
-    end
-
+    data = make_invoice_ids(invoice_id)
     data = attach_session_id(data,'Invoices')
     response = execute_action(:make_zlabel, data)
 
@@ -134,12 +124,7 @@ class PickpointApi::Session
       return nil
     end
 
-    if invoice_id.kind_of?(Array)
-      data = invoice_id
-    elsif
-      data = [invoice_id]
-    end
-
+    data = make_invoice_ids(invoice_id)
     data = attach_session_id(data,'Invoices')
     response = execute_action(:make_reestr, data)
 
@@ -206,6 +191,14 @@ class PickpointApi::Session
 
   private
 
+  def make_invoice_ids(invoice_id)
+    if invoice_id.kind_of?(Array)
+      invoice_id
+    elsif
+      [invoice_id]
+    end
+  end
+
   def api_path
     if @test
       ::PickpointApi::Constants::API_TEST_PATH
@@ -250,21 +243,23 @@ class PickpointApi::Session
 
     req.body = data.to_json
     response = send_request(req)
-
-    if !response.body.nil?
-      if response.body.start_with?('%PDF')
-        ::PickpointApi.logger.debug("Response: #{response.code}; data: PDF")
-      end
-        ::PickpointApi.logger.debug("Response: #{response.code}; data: #{response.body}")
-      else
-    end
-
+    log_response(response)
     response.body
   end
 
   def send_request(req)
     ::Net::HTTP.start(::PickpointApi::Constants::API_HOST, ::PickpointApi::Constants::API_PORT) do |http|
       http.request(req)
+    end
+  end
+
+  def log_response(response)
+    if !response.body.nil?
+      if response.body.start_with?('%PDF')
+        ::PickpointApi.logger.debug("Response: #{response.code}; data: PDF")
+      end
+        ::PickpointApi.logger.debug("Response: #{response.code}; data: #{response.body}")
+      else
     end
   end
 
