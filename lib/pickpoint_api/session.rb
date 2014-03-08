@@ -59,97 +59,27 @@ class PickpointApi::Session
 
   # Мониторинг отправления
   def track_sending(invoice_id)
-    if @state != :started
-      return nil
-    end
-
-    data = invoice_id
-    data = attach_session_id(data, 'InvoiceNumber')
-    response = execute_action(:track_sending, data)
-
-    if response.nil? || response.empty?
-      return nil
-    end
-
-    response = JSON.parse(response)
+    request_by_invoice_id(invoice_id, :track_sending)
   end
 
-  # Получение списка терминалов
-  def postamat_list
-    if @state == :started
-      response = execute_action(:postamat_list)
-      response = JSON.parse(response)
-    end
+  # Получение информации по отправлению
+  def sending_info(invoice_id)
+    request_by_invoice_id(invoice_id, :sending_info)
   end
 
   # Формирование этикеток в PDF
   def make_label(invoice_id)
-    if @state != :started
-      return nil
-    end
-
-    data = make_invoice_ids(invoice_id)
-    data = attach_session_id(data,'Invoices')
-    response = execute_action(:make_label, data)
-
-    if response.start_with?("Error")
-      raise ::PickpointApi::Exceptions::ApiError, response
-      return nil
-    else
-      return response
-    end
+    request_by_invoice_ids(invoice_id, :make_label)
   end
 
   # Формирование этикеток в PDF для принтера Zebra
   def make_zlabel(invoice_id)
-    if @state != :started
-      return nil
-    end
-
-    data = make_invoice_ids(invoice_id)
-    data = attach_session_id(data,'Invoices')
-    response = execute_action(:make_zlabel, data)
-
-    if response.start_with?("Error")
-      raise ::PickpointApi::Exceptions::ApiError, response
-      return nil
-    else
-      return response
-    end
+    request_by_invoice_ids(invoice_id, :make_zlabel)
   end
 
   # Формирование реестра по списку отправлений в PDF
   def make_reestr(invoice_id)
-    if @state != :started
-      return nil
-    end
-
-    data = make_invoice_ids(invoice_id)
-    data = attach_session_id(data,'Invoices')
-    response = execute_action(:make_reestr, data)
-
-    if response.start_with?("Error")
-      raise ::PickpointApi::Exceptions::ApiError, response
-      return nil
-    else
-      return response
-    end
-  end
-
-  # Получени информации по отправлению
-  def sending_info(invoice_id)
-    if @state != :started
-      return nil
-    end
-
-    data = attach_session_id(invoice_id, 'InvoiceNumber')
-    response = execute_action(:sending_info, data)
-
-    if(response.nil? || response.empty?)
-      return []
-    else
-      return JSON.parse(response)
-    end
+    request_by_invoice_ids(invoice_id, :make_reestr)
   end
 
   # Получение справочника статусов отправления
@@ -172,6 +102,14 @@ class PickpointApi::Session
     response = JSON.parse(response)
   end
 
+  # Получение списка терминалов
+  def postamat_list
+    if @state == :started
+      response = execute_action(:postamat_list)
+      response = JSON.parse(response)
+    end
+  end
+
   # Получение списка отправлений, прошедших этап (статус)
   def get_invoices_change_state(state, date_from = nil, date_to = DateTime.now)
     data = {
@@ -191,11 +129,40 @@ class PickpointApi::Session
 
   private
 
-  def make_invoice_ids(invoice_id)
-    if invoice_id.kind_of?(Array)
-      invoice_id
-    elsif
-      [invoice_id]
+  def request_by_invoice_ids(invoice_ids, action)
+    if @state != :started
+      return nil
+    end
+
+    data = if invoice_ids.kind_of?(Array)
+      invoice_ids
+    else
+      [invoice_ids]
+    end
+
+    data = attach_session_id(data,'Invoices')
+    response = execute_action(action, data)
+
+    if response.start_with?("Error")
+      raise ::PickpointApi::Exceptions::ApiError, response
+      return nil
+    else
+      return response
+    end
+  end
+
+  def request_by_invoice_id(invoice_id, action)
+    if @state != :started
+      return nil
+    end
+
+    data = attach_session_id(invoice_id, 'InvoiceNumber')
+    response = execute_action(action, data)
+
+    if(response.nil? || response.empty?)
+      []
+    else
+      JSON.parse(response)
     end
   end
 
@@ -222,7 +189,6 @@ class PickpointApi::Session
     end
 
     req.content_type = 'application/json'
-
     req
   end
 
