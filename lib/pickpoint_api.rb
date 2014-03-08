@@ -1,6 +1,7 @@
 require('logger')
 
 module PickpointApi
+  VERSION = "0.1"
 
   @logger = Logger.new($stdout)
   @logger.level = Logger::INFO

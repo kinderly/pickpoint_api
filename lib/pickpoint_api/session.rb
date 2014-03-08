@@ -15,6 +15,13 @@ class PickpointApi::Session
 
   private
 
+  def sendings_request(action, data)
+    ensure_session_state
+    data = attach_session_id(data, 'Sendings')
+    response = execute_action(action, data)
+    response = JSON.parse(response)
+  end
+
   def parameterless_request(action)
     ensure_session_state
     response = execute_action(action)
@@ -46,6 +53,7 @@ class PickpointApi::Session
   end
 
   def return_request(action, ikn, document_number, date_from, date_to = DateTime.now)
+    ensure_session_state
     data = {
       'SessionId' => @session_id,
       'IKN' => ikn,

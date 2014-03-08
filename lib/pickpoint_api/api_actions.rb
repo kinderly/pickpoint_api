@@ -39,70 +39,50 @@ module PickpointApi::ApiActions
 
   end
 
-  # Регистрация одноместного отправления
+  # Регистрация одноместных отправлений
   def create_sending(data)
+    sendings_request(:create_sending, data)
+  end
+
+  # Регистрация многоместных отправлений
+  def create_shipment(data)
+    sendings_request(:create_shipment, data)
+  end
+
+  # Создание отправления клиентского возврата
+  def make_return(options)
     ensure_session_state
-    data = attach_session_id(data, 'Sendings')
-    response = execute_action(:create_sending, data)
-    response = JSON.parse(response)
-  end
 
-  # Мониторинг отправления
-  def track_sending(invoice_id = nil, sender_invoice_number = nil)
-    request_by_invoice_id(:track_sending, invoice_id, sender_invoice_number)
-  end
+    if !options[:invoice_id].nil? && !options[:sender_invoice_number].nil?
+      raise ApiError 'Only :invoice_id or :sender_invoice_number parameter should be specified'
+    end
 
-  # Получение информации по отправлению
-  def sending_info(invoice_id = nil, sender_invoice_number = nil)
-    request_by_invoice_id(:sending_info, invoice_id, sender_invoice_number)
-  end
-
-  # Формирование этикеток в PDF
-  def make_label(invoice_id)
-    request_by_invoice_ids(invoice_id, :make_label)
-  end
-
-  # Формирование этикеток в PDF для принтера Zebra
-  def make_zlabel(invoice_id)
-    request_by_invoice_ids(invoice_id, :make_zlabel)
-  end
-
-  # Формирование реестра по списку отправлений в PDF
-  def make_reestr(invoice_id)
-    request_by_invoice_ids(invoice_id, :make_reestr)
-  end
-
-  # Получение истории по списку отправлений
-  def track_sendings(invoice_id)
-    request_by_invoice_ids(invoice_id, :track_sendings)
-  end
-
-  # Получение справочника статусов отправления
-  def get_states
-    parameterless_request(:get_states)
-  end
-
-  # Получение списка городов
-  def city_list
-    parameterless_request(:city_list)
-  end
-
-  # Получение списка терминалов
-  def postamat_list
-    parameterless_request(:postamat_list)
-  end
-
-  # Получение списка отправлений, прошедших этап (статус)
-  def get_invoices_change_state(state, date_from, date_to = DateTime.now)
-    ensure_session_state
     data = {
-      'SessionId' => @session_id,
-      'DateFrom' => date_from.strftime('%d.%m.%y'),
-      'DateTo' => date_to.strftime('%d.%m.%y'),
-      'State' => state
+      'SessionId' => @session_id
     }
-    response = execute_action(:get_invoices_change_state, data)
-    JSON.parse(response)
+
+    if !options[:invoice_id].nil?
+      data['InvoiceNumber'] = options[:invoice_id]
+    elsif !options[:sender_invoice_number].nil?
+      data['GCInvoiceNumber'] = options[:sender_invoice_number]
+    else
+      raise ApiError 'Either :invoice_id or :sender_invoice_number parameter should be specified'
+    end
+
+    response = execute_action(:get_delivery_cost, data)
+    res = JSON.parse(response)
+
+    errors = res.select do |x|
+      !x['Error'].nil? && !x['Error'].empty?
+    end.map do |x|
+      x['Error']
+    end
+
+    if !errors.empty
+      raise ApiError errors.join(';')
+    end
+
+    res
   end
 
   # Получение списка возвратных отправлений
@@ -123,19 +103,38 @@ module PickpointApi::ApiActions
     res
   end
 
-  # Получение информации по зонам
-  def get_zone(city, pt = nil)
-    ensure_session_state
-    data = {
-      'SessionId' => @session_id,
-      'FromCity' => city
-    }
+  # Мониторинг отправления
+  def track_sending(invoice_id = nil, sender_invoice_number = nil)
+    request_by_invoice_id(:track_sending, invoice_id, sender_invoice_number)
+  end
 
-    if !pt.nil?
-      data['ToPT'] = pt
+  # Получение информации по отправлению
+  def sending_info(invoice_id = nil, sender_invoice_number = nil)
+    request_by_invoice_id(:sending_info, invoice_id, sender_invoice_number)
+  end
+
+  # Получение стоимости доставки
+  def get_delivery_cost(options)
+    ensure_session_state
+
+    if !options[:invoice_ids].nil? && !options[:sender_invoice_numbers].nil?
+      raise ApiError 'Only :invoice_ids or :sender_invoice_numbers parameter should be specified'
     end
 
-    response = execute_action(:get_zone, data)
+    data = if !options[:invoice_ids].nil?
+      options[:invoice_ids].map do |invoice_id|
+        {'InvoiceNumber' => invoice_id}
+      end
+    elsif !options[:sender_invoice_numbers].nil?
+      options[:invoice_ids].map do |invoice_id|
+        {'SenderInvoiceNumber' => invoice_id}
+      end
+    else
+      raise ApiError 'Either :invoice_ids or :sender_invoice_numbers parameter should be specified'
+    end
+
+    data = attach_session_id('Sendings', data)
+    response = execute_action(:get_delivery_cost, data)
     JSON.parse(response)
   end
 
@@ -163,22 +162,14 @@ module PickpointApi::ApiActions
     res['Canceled']
   end
 
-  # Получение информации по вложимому
-  def enclose_info(barcode)
-    ensure_session_state
-    data = attach_session_id('Barcode', barcode)
-    response = execute_action(:enclose_info, data)
-    res = JSON.parse(response)
-
-    if !res['Error'].nil? && !res['Error'].empty?
-      raise ApiError res['Error']
-    end
-
-    res
+  # Формирование реестра по списку отправлений в PDF
+  def make_reestr(invoice_id)
+    request_by_invoice_ids(invoice_id, :make_reestr)
   end
 
   # Формирование реестра (по списку отправлений)
   def make_reestr_number(invoice_ids)
+    ensure_session_state
     response = request_by_invoice_ids(invoice_id, :make_reestr_number)
     res = JSON.parse(response)
 
@@ -191,6 +182,7 @@ module PickpointApi::ApiActions
 
   # Получение созданного реестра в PDF
   def get_reestr(invoice_id = nil, reestr_number = nil)
+    ensure_session_state
     data = {
       'SessionId' => @session_id
     }
@@ -207,9 +199,40 @@ module PickpointApi::ApiActions
     end
   end
 
-  # Получение акта возврата товара
-  def get_product_return_order(ikn, document_number, date_from, date_to = DateTime.now)
-    return_request(:get_product_return_order, ikn, document_number, date_from, date_to)
+  # Формирование этикеток в PDF
+  def make_label(invoice_id)
+    request_by_invoice_ids(invoice_id, :make_label)
+  end
+
+  # Формирование этикеток в PDF для принтера Zebra
+  def make_zlabel(invoice_id)
+    request_by_invoice_ids(invoice_id, :make_zlabel)
+  end
+
+  # Получение списка городов
+  def city_list
+    parameterless_request(:city_list)
+  end
+
+  # Получение списка терминалов
+  def postamat_list
+    parameterless_request(:postamat_list)
+  end
+
+  # Получение информации по зонам
+  def get_zone(city, pt = nil)
+    ensure_session_state
+    data = {
+      'SessionId' => @session_id,
+      'FromCity' => city
+    }
+
+    if !pt.nil?
+      data['ToPT'] = pt
+    end
+
+    response = execute_action(:get_zone, data)
+    JSON.parse(response)
   end
 
   # Получение акта возврата денег
@@ -217,27 +240,45 @@ module PickpointApi::ApiActions
     return_request(:get_money_return_order, ikn, document_number, date_from, date_to)
   end
 
-  # Получение стоимости доставки
-  def get_delivery_cost(options)
+  # Получение акта возврата товара
+  def get_product_return_order(ikn, document_number, date_from, date_to = DateTime.now)
+    return_request(:get_product_return_order, ikn, document_number, date_from, date_to)
+  end
 
-    if !options[:invoice_ids].nil? && !options[:sender_invoice_numbers].nil?
-      raise ApiError
+  # Получение информации по вложимому
+  def enclose_info(barcode)
+    ensure_session_state
+    data = attach_session_id('Barcode', barcode)
+    response = execute_action(:enclose_info, data)
+    res = JSON.parse(response)
+
+    if !res['Error'].nil? && !res['Error'].empty?
+      raise ApiError res['Error']
     end
 
-    data = if !options[:invoice_ids].nil?
-      options[:invoice_ids].map do |invoice_id|
-        {'InvoiceNumber' => invoice_id}
-      end
-    elsif !options[:sender_invoice_numbers].nil?
-      options[:invoice_ids].map do |invoice_id|
-        {'SenderInvoiceNumber' => invoice_id}
-      end
-    else
-      raise ApiError
-    end
+    res
+  end
 
-    data = attach_session_id('Sendings', data)
-    response = execute_action(:get_delivery_cost, data)
+  # Получение истории по списку отправлений
+  def track_sendings(invoice_id)
+    request_by_invoice_ids(invoice_id, :track_sendings)
+  end
+
+  # Получение справочника статусов отправления
+  def get_states
+    parameterless_request(:get_states)
+  end
+
+  # Получение списка отправлений, прошедших этап (статус)
+  def get_invoices_change_state(state, date_from, date_to = DateTime.now)
+    ensure_session_state
+    data = {
+      'SessionId' => @session_id,
+      'DateFrom' => date_from.strftime('%d.%m.%y'),
+      'DateTo' => date_to.strftime('%d.%m.%y'),
+      'State' => state
+    }
+    response = execute_action(:get_invoices_change_state, data)
     JSON.parse(response)
   end
 

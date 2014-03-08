@@ -63,7 +63,7 @@ module DummyData
   ].to_json
 
 
-  SAMPLE_SENDING_REQUEST =  {
+  SAMPLE_SENDING_REQUEST =  [{
     'EDTN' => 14,
     'IKN' => '9990000000',
      'Invoice' => {
@@ -86,6 +86,6 @@ module DummyData
             'Price' => 4290.0
           }]
       }
-  }
+  }]
 
 end
