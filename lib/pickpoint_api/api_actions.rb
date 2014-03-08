@@ -10,8 +10,7 @@ module PickpointApi::ApiActions
   def login(login, password)
     ensure_session_state(:new)
     data = {'Login' => login, 'Password' => password}
-    response = execute_action(:login, data)
-    response = JSON.parse(response)
+    response = json_request(:login, data)
     check_for_error(response, 'ErrorMessage', LoginError) do
       @state = :error
     end
@@ -25,8 +24,7 @@ module PickpointApi::ApiActions
   def logout
     ensure_session_state
     data = {'SessionId' => @session_id}
-    response = execute_action :logout, data
-    response = JSON.parse(response)
+    response = json_request(:logout, data)
 
     if response['Success'] == true
       @state = :closed
@@ -67,8 +65,7 @@ module PickpointApi::ApiActions
       raise ApiError 'Either :invoice_id or :sender_invoice_number parameter should be specified'
     end
 
-    response = execute_action(:get_delivery_cost, data)
-    res = JSON.parse(response)
+    response = json_request(:make_return, data)
 
     errors = res.select do |x|
       !x['Error'].nil? && !x['Error'].empty?
@@ -91,8 +88,7 @@ module PickpointApi::ApiActions
       'DateFrom' => date_from.strftime(DATE_FORMAT),
       'DateTo' => date_to.strftime(DATE_FORMAT)
     }
-    response = execute_action(:get_return_invoice_list, data)
-    res = JSON.parse(response)
+    res = json_request(:get_return_invoice_list, data)
     check_for_error(res, 'Error')
   end
 
@@ -127,8 +123,7 @@ module PickpointApi::ApiActions
     end
 
     data = attach_session_id('Sendings', data)
-    response = execute_action(:get_delivery_cost, data)
-    JSON.parse(response)
+    json_request(:get_delivery_cost, data)
   end
 
   # Вызов курьера
@@ -136,8 +131,7 @@ module PickpointApi::ApiActions
     ensure_session_state
     data = data.clone
     data['SessionId'] = @session_id
-    response = execute_action(:courier, data)
-    res = JSON.parse(response)
+    res = json_request(:courier, data)
     check_for_error(res, 'ErrorMessage', CourierError)
   end
 
@@ -145,8 +139,7 @@ module PickpointApi::ApiActions
   def courier_cancel(courier_order_number)
     ensure_session_state
     data = attach_session_id('OrderNumber', courier_order_number)
-    response = execute_action(:courier_cancel, data)
-    res = JSON.parse(response)
+    res = json_request(:courier_cancel, data)
     res['Canceled']
   end
 
@@ -213,8 +206,7 @@ module PickpointApi::ApiActions
       data['ToPT'] = pt
     end
 
-    response = execute_action(:get_zone, data)
-    JSON.parse(response)
+    json_request(:get_zone, data)
   end
 
   # Получение акта возврата денег
@@ -231,8 +223,7 @@ module PickpointApi::ApiActions
   def enclose_info(barcode)
     ensure_session_state
     data = attach_session_id('Barcode', barcode)
-    response = execute_action(:enclose_info, data)
-    res = JSON.parse(response)
+    res = json_request(:enclose_info, data)
     check_for_error(res, 'Error')
   end
 
@@ -255,8 +246,7 @@ module PickpointApi::ApiActions
       'DateTo' => date_to.strftime(DATE_FORMAT),
       'State' => state
     }
-    response = execute_action(:get_invoices_change_state, data)
-    JSON.parse(response)
+    json_request(:get_invoices_change_state, data)
   end
 
 end

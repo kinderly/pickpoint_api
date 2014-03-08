@@ -27,8 +27,7 @@ class PickpointApi::Session
   def sendings_request(action, data)
     ensure_session_state
     data = attach_session_id(data, 'Sendings')
-    response = execute_action(action, data)
-    response = JSON.parse(response)
+    json_request(action, data)
   end
 
   def parameterless_request(action)
@@ -41,6 +40,11 @@ class PickpointApi::Session
     if @state != state
       raise InvalidSessionState
     end
+  end
+
+  def json_request(action, data)
+    response = execute_action(action, data)
+    JSON.parse(response)
   end
 
   def request_by_invoice_ids(invoice_ids, action)
@@ -70,8 +74,7 @@ class PickpointApi::Session
       'DateFrom' => date_from.strftime(DATE_FORMAT),
       'DateEnd' => date_to.strftime(DATE_FORMAT)
     }
-    response = execute_action(action, data)
-    res = JSON.parse(response)
+    json_request(action, data)
     check_for_error(res, 'Error')
   end
 
@@ -89,13 +92,7 @@ class PickpointApi::Session
       data['SenderInvoiceNumber'] = sender_invoice_number
     end
 
-    response = execute_action(action, data)
-
-    if(response.nil? || response.empty?)
-      []
-    else
-      JSON.parse(response)
-    end
+    json_request(action, data)
   end
 
   def api_path
