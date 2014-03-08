@@ -45,6 +45,25 @@ class PickpointApi::Session
     end
   end
 
+  def return_request(action, ikn, document_number, date_from, date_to = DateTime.now)
+    data = {
+      'SessionId' => @session_id,
+      'IKN' => ikn,
+      'DocumentNumber' => document_number,
+      'DateFrom' => date_from.strftime('%d.%m.%y'),
+      'DateEnd' => date_to.strftime('%d.%m.%y')
+    }
+
+    response = execute_action(action, data)
+    res = JSON.parse(response)
+
+    if !res['Error'].nil? && !res['Error'].empty?
+      raise ApiError res['Error']
+    end
+
+    res
+  end
+
   def request_by_invoice_id(action, invoice_id = nil, sender_invoice_number = nil)
     ensure_session_state
     data = {

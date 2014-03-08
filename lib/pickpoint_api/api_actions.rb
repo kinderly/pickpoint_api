@@ -157,7 +157,7 @@ module PickpointApi::ApiActions
   # Отмена вызова курьера
   def courier_cancel(courier_order_number)
     ensure_session_state
-    data = attach_session_id("OrderNumber", courier_order_number)
+    data = attach_session_id('OrderNumber', courier_order_number)
     response = execute_action(:courier_cancel, data)
     res = JSON.parse(response)
     res['Canceled']
@@ -175,6 +175,70 @@ module PickpointApi::ApiActions
     end
 
     res
+  end
+
+  # Формирование реестра (по списку отправлений)
+  def make_reestr_number(invoice_ids)
+    response = request_by_invoice_ids(invoice_id, :make_reestr_number)
+    res = JSON.parse(response)
+
+    if !res['ErrorMessage'].nil? && !res['ErrorMessage'].empty?
+      raise CourierError, res['ErrorMessage']
+    end
+
+    res['Numbers']
+  end
+
+  # Получение созданного реестра в PDF
+  def get_reestr(invoice_id = nil, reestr_number = nil)
+    data = {
+      'SessionId' => @session_id
+    }
+
+    data['InvoiceNumber'] = invoice_id if !invoice_id.nil?
+    data['ReestrNumber'] = reestr_number if !reestr_number.nil?
+
+    response = execute_action(:get_reestr, data)
+
+    if response.start_with?('Error')
+      raise ApiError, response
+    else
+      return response
+    end
+  end
+
+  # Получение акта возврата товара
+  def get_product_return_order(ikn, document_number, date_from, date_to = DateTime.now)
+    return_request(:get_product_return_order, ikn, document_number, date_from, date_to)
+  end
+
+  # Получение акта возврата денег
+  def get_money_return_order(ikn, document_number, date_from, date_to = DateTime.now)
+    return_request(:get_money_return_order, ikn, document_number, date_from, date_to)
+  end
+
+  # Получение стоимости доставки
+  def get_delivery_cost(options)
+
+    if !options[:invoice_ids].nil? && !options[:sender_invoice_numbers].nil?
+      raise ApiError
+    end
+
+    data = if !options[:invoice_ids].nil?
+      options[:invoice_ids].map do |invoice_id|
+        {'InvoiceNumber' => invoice_id}
+      end
+    elsif !options[:sender_invoice_numbers].nil?
+      options[:invoice_ids].map do |invoice_id|
+        {'SenderInvoiceNumber' => invoice_id}
+      end
+    else
+      raise ApiError
+    end
+
+    data = attach_session_id('Sendings', data)
+    response = execute_action(:get_delivery_cost, data)
+    JSON.parse(response)
   end
 
 end
