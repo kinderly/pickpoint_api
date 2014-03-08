@@ -7,7 +7,7 @@
 
 ## Description
 
-This gem provides a basic Ruby wrapper over [Pickpoint](http://pickpoint.ru/) API.
+This gem provides a Ruby wrapper over [Pickpoint](http://pickpoint.ru/) API. All API methods documented by Feb 1 2014 are implemented.
 
 ## Installation
 
@@ -34,16 +34,39 @@ gem pickpoint_api, git: 'git@github.com:kinderly/pickpoint_api.git'
 require('pickpoint_api')
 
 PickpointApi.session('login', 'password', test: true) do |s|
+  result = s.create_sending(@my_sending_hash)
+  result = s.create_shipment(@my_shipment_hash)
+  result = s.make_return(invoice_id: @invoice_id)
+  result = s.make_return(sender_invoice_number: @order_number)
+  return_invoices_list = s.get_return_invoices_list(DateTime.parse('2014-01-01'), DateTime.now)
+  tracking_response = s.track_sending(@invoice_id)
+  tracking_response = s.track_sending(nil, @order_number)
+  info = s.sending_info(@invoice_id)
+  info = s.sending_info(nil, @order_number)
+  cost_result = s.get_delivery_cost(@delivery_hash)
+  courier_result = s.courier(@courier_hash)
+  courier_cancel_result = s.courier_cancel(@courier_order_number)
+  reestr_response_pdf = s.make_reestr(@invoice_id)
+  reestr_response_pdf = s.make_reestr([@invoice_id1, @invoice_id2])
+  reestr_numbers = s.make_reestr_number(@invoice_id)
+  reestr_numbers = s.make_reestr_number([@invoice_id1, @invoice_id2])
+  reestr_pdf = get_reestr(@invoice_id)
+  reestr_pdf = get_reestr(nil, @reestr_number)
+  labels_pdf = make_label(invoice_id)
+  labels_pdf = make_label([@invoice_id1, @invoice_id2])
+  zebra_labels_pdf = make_zlabel(invoice_id)
+  zebra_labels_pdf = make_zlabel([@invoice_id1, @invoice_id2])
+  cities = s.city_list
   postamats = s.postamat_list
-
-  s.create_sending(@my_sending_hash)
-
-  tracking_response = s.track_sending(@invoice_id_1)
-
-  labels_response_pdf = s.make_label([@invoice_id_1, @invoice_id_2])
-
-  reestr_response_pdf = s.make_reestr([@invoice_id_1, @invoice_id_2])
-
+  zone_info = s.get_zone(@city_name)
+  zone_info = s.get_zone(@city_name, @postamat_num)
+  result = s.get_money_return_order(@ikn, @document_number, @date_from, @date_to)
+  result = s.get_product_return_order(@ikn, @document_number, @date_from, @date_to)
+  result = s.enclose_info(@barcode)
+  history = s.track_sendings(invoice_id)
+  history = s.track_sendings([@invoice_id1, @invoice_id2])
+  states = s.get_states
+  registered_invoices = s.get_invoices_change_state(101, @date_from, @date_to)
 end
 ```
 
@@ -54,6 +77,10 @@ require ('pickpoint_api')
 
 session = PickpointApi::Session.new(test: true)
 session.login('login', 'password')
-tracking_response = session.track_sending(@invoice_id_1)
+cities = s.city_list
+postamats = s.postamat_list
+zone_info = s.get_zone(@city_name)
 session.logout
 ```
+
+Please refer to the official [Pickpoint](http://pickpoint.ru/) API documentation to learn about method meanings, expected request arguments, data format etc.
