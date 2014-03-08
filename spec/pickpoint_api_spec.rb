@@ -4,6 +4,10 @@ require_relative 'spec_helper.rb'
 include DummyData
 
 describe 'PickpointApi' do
+  before(:each) do
+    HttpMocking.clear_response_queue
+  end
+
   it 'should run session' do
     HttpMocking.enqueue_response(LOGIN_SUCCESSFUL)
     HttpMocking.enqueue_response(LOGOUT_SUCCESSFUL)

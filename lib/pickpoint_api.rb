@@ -22,7 +22,7 @@ module PickpointApi
     rescue => ex
       raise ::PickpointApi::Exceptions::ApiError, ex.message
     ensure
-      if !session.nil? && session.state != :closed
+      if !session.nil? && session.state == :started
         session.logout
       end
     end

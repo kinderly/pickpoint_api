@@ -2,7 +2,7 @@ require_relative('./lib/pickpoint_api.rb')
 
 Gem::Specification.new do |s|
   s.name = "pickpoint_api"
-  s.version = ::PickpointApi.VERSION
+  s.version = ::PickpointApi::VERSION
   s.authors = ["Kinderly LTD"]
   s.email = ["nuinuhin@gmail.com"]
   s.homepage = "http://github.com/kinderly/pickpoint_api"

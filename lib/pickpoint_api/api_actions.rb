@@ -4,6 +4,7 @@ require('date')
 
 module PickpointApi::ApiActions
   include(::PickpointApi::Exceptions)
+  include(::PickpointApi::Constants)
 
   # Начало сессии
   def login(login, password)
@@ -11,20 +12,18 @@ module PickpointApi::ApiActions
     data = {'Login' => login, 'Password' => password}
     response = execute_action(:login, data)
     response = JSON.parse(response)
-
-    if response['ErrorMessage'].nil? && !response['SessionId'].nil?
-      @session_id = response['SessionId']
-      @state = :started
-    else
+    check_for_error(response, 'ErrorMessage', LoginError) do
       @state = :error
-      raise LoginError, response['ErrorMessage']
     end
+
+    @session_id = response['SessionId']
+    @state = :started
+    nil
   end
 
   # Завершение сессии
   def logout
     ensure_session_state
-
     data = {'SessionId' => @session_id}
     response = execute_action :logout, data
     response = JSON.parse(response)
@@ -36,7 +35,6 @@ module PickpointApi::ApiActions
       @state = :error
       raise LogoutError
     end
-
   end
 
   # Регистрация одноместных отправлений
@@ -90,17 +88,12 @@ module PickpointApi::ApiActions
     ensure_session_state
     data = {
       'SessionId' => @session_id,
-      'DateFrom' => date_from.strftime('%d.%m.%y'),
-      'DateTo' => date_to.strftime('%d.%m.%y')
+      'DateFrom' => date_from.strftime(DATE_FORMAT),
+      'DateTo' => date_to.strftime(DATE_FORMAT)
     }
     response = execute_action(:get_return_invoice_list, data)
     res = JSON.parse(response)
-
-    if !res['Error'].nil? && !res['Error'].empty?
-      raise ApiError res['Error']
-    end
-
-    res
+    check_for_error(res, 'Error')
   end
 
   # Мониторинг отправления
@@ -145,12 +138,7 @@ module PickpointApi::ApiActions
     data['SessionId'] = @session_id
     response = execute_action(:courier, data)
     res = JSON.parse(response)
-
-    if !res['ErrorMessage'].nil? && !res['ErrorMessage'].empty?
-      raise CourierError, res['ErrorMessage']
-    end
-
-    res
+    check_for_error(res, 'ErrorMessage', CourierError)
   end
 
   # Отмена вызова курьера
@@ -170,13 +158,9 @@ module PickpointApi::ApiActions
   # Формирование реестра (по списку отправлений)
   def make_reestr_number(invoice_ids)
     ensure_session_state
-    response = request_by_invoice_ids(invoice_id, :make_reestr_number)
+    response = request_by_invoice_ids(invoice_ids, :make_reestr_number)
     res = JSON.parse(response)
-
-    if !res['ErrorMessage'].nil? && !res['ErrorMessage'].empty?
-      raise CourierError, res['ErrorMessage']
-    end
-
+    check_for_error(res, 'ErrorMessage')
     res['Numbers']
   end
 
@@ -186,10 +170,8 @@ module PickpointApi::ApiActions
     data = {
       'SessionId' => @session_id
     }
-
     data['InvoiceNumber'] = invoice_id if !invoice_id.nil?
     data['ReestrNumber'] = reestr_number if !reestr_number.nil?
-
     response = execute_action(:get_reestr, data)
 
     if response.start_with?('Error')
@@ -251,12 +233,7 @@ module PickpointApi::ApiActions
     data = attach_session_id('Barcode', barcode)
     response = execute_action(:enclose_info, data)
     res = JSON.parse(response)
-
-    if !res['Error'].nil? && !res['Error'].empty?
-      raise ApiError res['Error']
-    end
-
-    res
+    check_for_error(res, 'Error')
   end
 
   # Получение истории по списку отправлений
@@ -274,8 +251,8 @@ module PickpointApi::ApiActions
     ensure_session_state
     data = {
       'SessionId' => @session_id,
-      'DateFrom' => date_from.strftime('%d.%m.%y'),
-      'DateTo' => date_to.strftime('%d.%m.%y'),
+      'DateFrom' => date_from.strftime(DATE_FORMAT),
+      'DateTo' => date_to.strftime(DATE_FORMAT),
       'State' => state
     }
     response = execute_action(:get_invoices_change_state, data)

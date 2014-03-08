@@ -4,6 +4,8 @@ module PickpointApi::Constants
   API_TEST_PATH = '/apitest'
   API_PROD_PATH = '/api'
 
+  DATE_FORMAT = '%d.%m.%y'
+
   ACTIONS = {
     login:
     {

@@ -15,6 +15,15 @@ class PickpointApi::Session
 
   private
 
+  def check_for_error(response, error_field, error = ApiError)
+    if !response[error_field].nil? && !response[error_field].empty?
+      yield if block_given?
+      raise error, response[error_field]
+    else
+      response
+    end
+  end
+
   def sendings_request(action, data)
     ensure_session_state
     data = attach_session_id(data, 'Sendings')
@@ -58,18 +67,12 @@ class PickpointApi::Session
       'SessionId' => @session_id,
       'IKN' => ikn,
       'DocumentNumber' => document_number,
-      'DateFrom' => date_from.strftime('%d.%m.%y'),
-      'DateEnd' => date_to.strftime('%d.%m.%y')
+      'DateFrom' => date_from.strftime(DATE_FORMAT),
+      'DateEnd' => date_to.strftime(DATE_FORMAT)
     }
-
     response = execute_action(action, data)
     res = JSON.parse(response)
-
-    if !res['Error'].nil? && !res['Error'].empty?
-      raise ApiError res['Error']
-    end
-
-    res
+    check_for_error(res, 'Error')
   end
 
   def request_by_invoice_id(action, invoice_id = nil, sender_invoice_number = nil)
@@ -135,6 +138,11 @@ class PickpointApi::Session
     req.body = data.to_json
     response = send_request(req)
     log_response(response)
+
+    if response.code != '200'
+      raise ApiError, response.body
+    end
+
     response.body
   end
 

@@ -3,6 +3,7 @@ require_relative '../spec_helper.rb'
 include DummyData
 
 describe ::PickpointApi::Session do
+
   before(:each) do
     ::HttpMocking.clear_response_queue
     @session = ::PickpointApi::Session.new(test: true)
@@ -123,6 +124,13 @@ describe ::PickpointApi::Session do
       ::HttpMocking.enqueue_response(GET_STATE_SUCCESS)
       res = @session.get_invoices_change_state(102, DateTime.parse('2014-01-01'), DateTime.parse('2014-03-01'))
       expect(res.count).to eq(1)
+    end
+  end
+
+  describe '.courier' do
+    it 'should handle successfull request' do
+      ::HttpMocking.enqueue_response('{}')
+      res = @session.courier({})
     end
   end
 
