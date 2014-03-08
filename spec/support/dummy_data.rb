@@ -3,13 +3,15 @@
 require ('json')
 
 module DummyData
-  LOGIN_SUCCESSFULL = {'SessionId' => '111111111'}.to_json
+
+  LOGIN_SUCCESSFUL = {'SessionId' => '111111111'}.to_json
 
   LOGIN_FAILED = {'ErrorMessage' => 'Неверный логин или пароль'}.to_json
 
-  LOGOUT_SUCCESSFULL = {'Success' => true}.to_json
+  LOGOUT_SUCCESSFUL = {'Success' => true}.to_json
+  LOGOUT_FAIL = {'Success' => false}.to_json
 
-  CREATE_SENDING_SUCCESSFULL = {
+  CREATE_SENDING_SUCCESSFUL = {
     'CreatedSendings' => [
       {
         'EDTN' => '14',
@@ -34,6 +36,32 @@ module DummyData
     {'State'=>102, 'StateText'=>'Сформирован для передачи Логисту'},
     {'State'=>103, 'StateText'=>'Развоз до ПТ самостоятельно'}
   ].to_json
+
+  ZONES_SUCCESS = {
+    'Error' => nil,
+    'Zones' => [
+      {
+        'DeliveryMax' => 2,
+        'DeliveryMin' => 1,
+        'FromCity' => 'Химки',
+        'Koeff' => 1,
+        'ToCity' => 'Санкт-Петербург',
+        'ToPT' => '7801-035',
+        'Zone' => '0'
+      }
+    ]
+  }.to_json
+
+  GET_STATE_SUCCESS = [
+    {
+      "ChangeDT" => "16.01.14 00:28",
+      "State" => 112,
+      "StateMessage" => "Невостребованное",
+      "InvoiceNumber"=>"0000000000000",
+      "SenderInvoiceNumber"=>"00000"
+    }
+  ].to_json
+
 
   SAMPLE_SENDING_REQUEST =  {
     'EDTN' => 14,

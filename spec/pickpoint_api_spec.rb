@@ -5,21 +5,40 @@ include DummyData
 
 describe 'PickpointApi' do
   it 'should run session' do
-    HttpMocking.set_next_response(LOGIN_SUCCESSFULL)
+    HttpMocking.enqueue_response(LOGIN_SUCCESSFUL)
+    HttpMocking.enqueue_response(LOGOUT_SUCCESSFUL)
 
     PickpointApi.session('login', 'password', test:true) do |s|
-      HttpMocking.set_next_response(LOGOUT_SUCCESSFULL)
     end
   end
 
   it 'should write logs' do
-
     PickpointApi.logger.level = Logger::UNKNOWN
     PickpointApi.logger.info('INFO')
     PickpointApi.logger.error('ERROR')
     PickpointApi.logger.warn('WARNING')
     PickpointApi.logger.fatal('FATAL')
     PickpointApi.logger.debug('DEBUG')
+  end
+
+  it 'should assign logger' do
+    PickpointApi.logger = nil
+    PickpointApi.logger = Logger.new($stderr)
+    expect(PickpointApi.logger).not_to be_nil
+  end
+
+  it 'should handle session error' do
+    PickpointApi.logger.level = Logger::UNKNOWN
+
+    HttpMocking.enqueue_response(LOGIN_SUCCESSFUL)
+    HttpMocking.enqueue_response(PDF_ERROR)
+    HttpMocking.enqueue_response(LOGOUT_SUCCESSFUL)
+
+    expect do
+      PickpointApi.session('login', 'password', test:true) do |s|
+        s.make_label('111111')
+      end
+    end.to raise_error PickpointApi::Exceptions::ApiError
   end
 
 end
