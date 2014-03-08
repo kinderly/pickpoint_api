@@ -9,6 +9,25 @@
 
 This gem provides a basic Ruby wrapper over [Pickpoint](http://pickpoint.ru/) API.
 
+## Installation
+
+You can install this gem with the following command:
+
+```bash
+gem install pickpoint_api
+```
+
+Or, if you are using Bundler, add it to your Gemfile:
+
+```ruby
+gem pickpoint_api
+```
+
+If you desire to have the most up-do-date development version, add Git URL to the Gemfile:
+```ruby
+gem pickpoint_api, git: 'git@github.com:kinderly/pickpoint_api.git'
+```
+
 ## Usage
 
 ```ruby
