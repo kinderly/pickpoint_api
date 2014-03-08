@@ -1,6 +1,7 @@
 require('logger')
 
 module PickpointApi
+
   @logger = Logger.new($stdout)
   @logger.level = Logger::INFO
 
@@ -28,7 +29,8 @@ module PickpointApi
 
 end
 
+require_relative('pickpoint_api/exceptions.rb')
 require_relative('pickpoint_api/constants.rb')
 require_relative('pickpoint_api/session.rb')
-require_relative('pickpoint_api/exceptions.rb')
+
 
