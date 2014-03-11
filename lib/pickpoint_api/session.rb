@@ -14,13 +14,19 @@ class PickpointApi::Session
   end
 
   private
+  def raise_if_error(response, error_field = 'Error', error = ApiError)
+    message = error_message(response, error_field)
+    return response unless message
 
-  def check_for_error(response, error_field, error = ApiError)
-    if !response[error_field].nil? && !response[error_field].empty?
-      yield if block_given?
-      raise error, response[error_field]
-    else
+    yield if block_given?
+    raise error, message
+  end
+
+  def error_message(response, error_field = 'Error')
+    if response.is_a?(String) && response.start_with?('Error')
       response
+    elsif !response[error_field].nil? && !response[error_field].empty?
+      response[error_field]
     end
   end
 
@@ -37,9 +43,7 @@ class PickpointApi::Session
   end
 
   def ensure_session_state(state = :started)
-    if @state != state
-      raise InvalidSessionState
-    end
+    raise InvalidSessionState if @state != state
   end
 
   def json_request(action, data)
@@ -55,14 +59,8 @@ class PickpointApi::Session
       [invoice_ids]
     end
 
-    data = attach_session_id(data,'Invoices')
-    response = execute_action(action, data)
-
-    if response.start_with?('Error')
-      raise ApiError, response
-    else
-      return response
-    end
+    data = attach_session_id(data, 'Invoices')
+    raise_if_error execute_action(action, data)
   end
 
   def return_request(action, ikn, document_number, date_from, date_to = DateTime.now)
@@ -74,41 +72,27 @@ class PickpointApi::Session
       'DateFrom' => date_from.strftime(DATE_FORMAT),
       'DateEnd' => date_to.strftime(DATE_FORMAT)
     }
-    json_request(action, data)
-    check_for_error(res, 'Error')
+    raise_if_error json_request(action, data)
   end
 
   def request_by_invoice_id(action, invoice_id = nil, sender_invoice_number = nil)
     ensure_session_state
-    data = {
-      'SessionId' => @session_id
-    }
 
-    if !invoice_id.nil?
-      data['InvoiceNumber'] = invoice_id
-    end
-
-    if !sender_invoice_number.nil?
-      data['SenderInvoiceNumber'] = sender_invoice_number
-    end
+    data = { 'SessionId' => @session_id }
+    data['InvoiceNumber'] = invoice_id unless invoice_id.nil?
+    data['SenderInvoiceNumber'] = sender_invoice_number unless sender_invoice_number.nil?
 
     json_request(action, data)
   end
 
   def api_path
-    if @test
-      API_TEST_PATH
-    else
-      API_PROD_PATH
-    end
+    @test ? API_TEST_PATH : API_PROD_PATH
   end
 
   def create_request(action)
     action_config = ACTIONS[action]
 
-    if action_config.nil?
-      raise UnknownApiAction, action
-    end
+    raise UnknownApiAction, action if action_config.nil?
 
     action_path = "#{api_path}#{action_config[:path]}"
 
@@ -136,9 +120,7 @@ class PickpointApi::Session
     response = send_request(req)
     log_response(response)
 
-    if response.code != '200'
-      raise ApiError, response.body
-    end
+    raise ApiError, response.body if response.code != '200'
 
     response.body
   end

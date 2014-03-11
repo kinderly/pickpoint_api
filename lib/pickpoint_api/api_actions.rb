@@ -11,7 +11,7 @@ module PickpointApi::ApiActions
     ensure_session_state(:new)
     data = {'Login' => login, 'Password' => password}
     response = json_request(:login, data)
-    check_for_error(response, 'ErrorMessage', LoginError) do
+    raise_if_error(response, 'ErrorMessage', LoginError) do
       @state = :error
     end
 
@@ -48,36 +48,22 @@ module PickpointApi::ApiActions
   # Создание отправления клиентского возврата
   def make_return(options)
     ensure_session_state
+    raise_if_options_incorrect
 
-    if !options[:invoice_id].nil? && !options[:sender_invoice_number].nil?
-      raise ApiError 'Only :invoice_id or :sender_invoice_number parameter should be specified'
-    end
-
-    data = {
-      'SessionId' => @session_id
-    }
+    data = { 'SessionId' => @session_id }
 
     if !options[:invoice_id].nil?
       data['InvoiceNumber'] = options[:invoice_id]
     elsif !options[:sender_invoice_number].nil?
       data['GCInvoiceNumber'] = options[:sender_invoice_number]
-    else
-      raise ApiError 'Either :invoice_id or :sender_invoice_number parameter should be specified'
     end
-
     response = json_request(:make_return, data)
 
-    errors = res.select do |x|
-      !x['Error'].nil? && !x['Error'].empty?
-    end.map do |x|
-      x['Error']
-    end
+    errors = response.select { |x| !x['Error'].nil? && x['Error'].any? }
+    errors = errors.map { |x| x['Error'] }
+    raise ApiError, errors.join(';') if errors.any?
 
-    if !errors.empty
-      raise ApiError errors.join(';')
-    end
-
-    res
+    response
   end
 
   # Получение списка возвратных отправлений
@@ -89,7 +75,7 @@ module PickpointApi::ApiActions
       'DateTo' => date_to.strftime(DATE_FORMAT)
     }
     res = json_request(:get_return_invoice_list, data)
-    check_for_error(res, 'Error')
+    raise_if_error res
   end
 
   # Мониторинг отправления
@@ -105,10 +91,7 @@ module PickpointApi::ApiActions
   # Получение стоимости доставки
   def get_delivery_cost(options)
     ensure_session_state
-
-    if !options[:invoice_ids].nil? && !options[:sender_invoice_numbers].nil?
-      raise ApiError 'Only :invoice_ids or :sender_invoice_numbers parameter should be specified'
-    end
+    raise_if_options_incorrect
 
     data = if !options[:invoice_ids].nil?
       options[:invoice_ids].map do |invoice_id|
@@ -118,8 +101,6 @@ module PickpointApi::ApiActions
       options[:invoice_ids].map do |invoice_id|
         {'SenderInvoiceNumber' => invoice_id}
       end
-    else
-      raise ApiError 'Either :invoice_ids or :sender_invoice_numbers parameter should be specified'
     end
 
     data = attach_session_id('Sendings', data)
@@ -132,7 +113,7 @@ module PickpointApi::ApiActions
     data = data.clone
     data['SessionId'] = @session_id
     res = json_request(:courier, data)
-    check_for_error(res, 'ErrorMessage', CourierError)
+    raise_if_error(res, 'ErrorMessage', CourierError)
   end
 
   # Отмена вызова курьера
@@ -153,7 +134,7 @@ module PickpointApi::ApiActions
     ensure_session_state
     response = request_by_invoice_ids(invoice_ids, :make_reestr_number)
     res = JSON.parse(response)
-    check_for_error(res, 'ErrorMessage')
+    raise_if_error(res, 'ErrorMessage')
     res['Numbers']
   end
 
@@ -167,11 +148,7 @@ module PickpointApi::ApiActions
     data['ReestrNumber'] = reestr_number if !reestr_number.nil?
     response = execute_action(:get_reestr, data)
 
-    if response.start_with?('Error')
-      raise ApiError, response
-    else
-      return response
-    end
+    raise_if_error(response)
   end
 
   # Формирование этикеток в PDF
@@ -201,10 +178,7 @@ module PickpointApi::ApiActions
       'SessionId' => @session_id,
       'FromCity' => city
     }
-
-    if !pt.nil?
-      data['ToPT'] = pt
-    end
+    data['ToPT'] = pt unless pt.nil?
 
     json_request(:get_zone, data)
   end
@@ -224,7 +198,7 @@ module PickpointApi::ApiActions
     ensure_session_state
     data = attach_session_id('Barcode', barcode)
     res = json_request(:enclose_info, data)
-    check_for_error(res, 'Error')
+    raise_if_error(res)
   end
 
   # Получение истории по списку отправлений
@@ -247,6 +221,18 @@ module PickpointApi::ApiActions
       'State' => state
     }
     json_request(:get_invoices_change_state, data)
+  end
+
+  private
+  # Проверка корректности параметров
+  def raise_if_options_incorrect(options)
+    case [ options[:invoice_id], options[:sender_invoice_number] ].compact.size
+    when 2
+      raise ApiError 'Only :invoice_id or :sender_invoice_number parameter should be specified'
+    when 0
+      raise ApiError 'Either :invoice_id or :sender_invoice_number parameter should be specified'
+    end
+    options
   end
 
 end
