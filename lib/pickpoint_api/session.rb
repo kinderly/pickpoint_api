@@ -43,7 +43,7 @@ class PickpointApi::Session
   end
 
   def ensure_session_state(state = :started)
-    raise InvalidSessionState if @state != state
+    raise InvalidSessionStateError if @state != state
   end
 
   def json_request(action, data)
@@ -92,7 +92,7 @@ class PickpointApi::Session
   def create_request(action)
     action_config = ACTIONS[action]
 
-    raise UnknownApiAction, action if action_config.nil?
+    raise UnknownApiActionError, action if action_config.nil?
 
     action_path = "#{api_path}#{action_config[:path]}"
 
@@ -143,5 +143,16 @@ class PickpointApi::Session
 
   def logger
     ::PickpointApi.logger
+  end
+
+  # Проверка корректности параметров
+  def raise_if_options_incorrect(options)
+    case [ options[:invoice_id], options[:sender_invoice_number] ].compact.size
+    when 2
+      raise ApiError 'Only :invoice_id or :sender_invoice_number parameter should be specified'
+    when 0
+      raise ApiError 'Either :invoice_id or :sender_invoice_number parameter should be specified'
+    end
+    options
   end
 end

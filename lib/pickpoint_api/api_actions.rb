@@ -223,16 +223,4 @@ module PickpointApi::ApiActions
     json_request(:get_invoices_change_state, data)
   end
 
-  private
-  # Проверка корректности параметров
-  def raise_if_options_incorrect(options)
-    case [ options[:invoice_id], options[:sender_invoice_number] ].compact.size
-    when 2
-      raise ApiError 'Only :invoice_id or :sender_invoice_number parameter should be specified'
-    when 0
-      raise ApiError 'Either :invoice_id or :sender_invoice_number parameter should be specified'
-    end
-    options
-  end
-
 end

@@ -21,7 +21,7 @@ describe ::PickpointApi::Session do
   it 'should raise error on invalid session state' do
     ::HttpMocking.enqueue_response(LOGOUT_SUCCESSFUL)
     @session.logout
-    expect {@session.city_list}.to raise_error ::PickpointApi::Exceptions::InvalidSessionState
+    expect {@session.city_list}.to raise_error ::PickpointApi::Exceptions::InvalidSessionStateError
   end
 
   describe '.login' do
