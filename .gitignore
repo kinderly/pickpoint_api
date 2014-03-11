@@ -1,7 +1,8 @@
 /coverage
 
 # Editors files
-/*.sublime-project
+*.sublime-project
+*.sublime-workspace
 
 # CTags indexes
 /.tags

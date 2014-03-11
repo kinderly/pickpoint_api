@@ -17,7 +17,6 @@ class PickpointApi::Session
   def raise_if_error(response, error_field = 'Error', error = ApiError)
     message = error_message(response, error_field)
     return response unless message
-
     yield if block_given?
     raise error, message
   end
@@ -25,6 +24,10 @@ class PickpointApi::Session
   def error_message(response, error_field = 'Error')
     if response.is_a?(String) && response.start_with?('Error')
       response
+    elsif response.is_a?(Array)
+      errors = response.select { |x| !x[error_field].nil? && !x[error_field].empty? }
+        .map {|x| x[error_field]}
+      return errors.join("; ") if errors.any?
     elsif !response[error_field].nil? && !response[error_field].empty?
       response[error_field]
     end
@@ -53,6 +56,7 @@ class PickpointApi::Session
 
   def request_by_invoice_ids(invoice_ids, action)
     ensure_session_state
+
     data = if invoice_ids.kind_of?(Array)
       invoice_ids
     else
@@ -77,11 +81,9 @@ class PickpointApi::Session
 
   def request_by_invoice_id(action, invoice_id = nil, sender_invoice_number = nil)
     ensure_session_state
-
     data = { 'SessionId' => @session_id }
     data['InvoiceNumber'] = invoice_id unless invoice_id.nil?
     data['SenderInvoiceNumber'] = sender_invoice_number unless sender_invoice_number.nil?
-
     json_request(action, data)
   end
 
@@ -91,9 +93,7 @@ class PickpointApi::Session
 
   def create_request(action)
     action_config = ACTIONS[action]
-
     raise UnknownApiActionError, action if action_config.nil?
-
     action_path = "#{api_path}#{action_config[:path]}"
 
     if action_config[:method] == :post
@@ -119,9 +119,7 @@ class PickpointApi::Session
     req.body = data.to_json
     response = send_request(req)
     log_response(response)
-
     raise ApiError, response.body if response.code != '200'
-
     response.body
   end
 
@@ -146,13 +144,11 @@ class PickpointApi::Session
   end
 
   # Проверка корректности параметров
-  def raise_if_options_incorrect(options)
-    case [ options[:invoice_id], options[:sender_invoice_number] ].compact.size
-    when 2
-      raise ApiError 'Only :invoice_id or :sender_invoice_number parameter should be specified'
-    when 0
-      raise ApiError 'Either :invoice_id or :sender_invoice_number parameter should be specified'
+  def raise_if_options_incorrect(options, *keys)
+    if keys.map{ |key| options[key] }.compact.size != 1
+      raise ApiError "Exactly one of the following parmaters should be specified: #{keys.join(', ')}"
     end
+
     options
   end
 end

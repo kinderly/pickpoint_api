@@ -11,6 +11,7 @@ module PickpointApi::ApiActions
     ensure_session_state(:new)
     data = {'Login' => login, 'Password' => password}
     response = json_request(:login, data)
+
     raise_if_error(response, 'ErrorMessage', LoginError) do
       @state = :error
     end
@@ -48,8 +49,7 @@ module PickpointApi::ApiActions
   # Создание отправления клиентского возврата
   def make_return(options)
     ensure_session_state
-    raise_if_options_incorrect
-
+    raise_if_options_incorrect(options, :invoice_id, :sender_invoice_number)
     data = { 'SessionId' => @session_id }
 
     if !options[:invoice_id].nil?
@@ -57,12 +57,9 @@ module PickpointApi::ApiActions
     elsif !options[:sender_invoice_number].nil?
       data['GCInvoiceNumber'] = options[:sender_invoice_number]
     end
+
     response = json_request(:make_return, data)
-
-    errors = response.select { |x| !x['Error'].nil? && x['Error'].any? }
-    errors = errors.map { |x| x['Error'] }
-    raise ApiError, errors.join(';') if errors.any?
-
+    raise_if_error(response)
     response
   end
 
@@ -91,7 +88,7 @@ module PickpointApi::ApiActions
   # Получение стоимости доставки
   def get_delivery_cost(options)
     ensure_session_state
-    raise_if_options_incorrect
+    raise_if_options_incorrect(options, :invoice_ids, :sender_invoice_numbers)
 
     data = if !options[:invoice_ids].nil?
       options[:invoice_ids].map do |invoice_id|
@@ -147,7 +144,6 @@ module PickpointApi::ApiActions
     data['InvoiceNumber'] = invoice_id if !invoice_id.nil?
     data['ReestrNumber'] = reestr_number if !reestr_number.nil?
     response = execute_action(:get_reestr, data)
-
     raise_if_error(response)
   end
 
@@ -179,7 +175,6 @@ module PickpointApi::ApiActions
       'FromCity' => city
     }
     data['ToPT'] = pt unless pt.nil?
-
     json_request(:get_zone, data)
   end
 
