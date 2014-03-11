@@ -1,1 +1,10 @@
 /coverage
+
+# Editors files
+/*.sublime-project
+
+# CTags indexes
+/.tags
+/.tags_sorted_by_file
+
+.DS_Store
