@@ -1,4 +1,4 @@
-require_relative '../spec_helper.rb'
+require_relative '../../spec_helper.rb'
 
 include DummyData
 
@@ -24,7 +24,7 @@ describe ::PickpointApi::Session do
     expect {@session.city_list}.to raise_error ::PickpointApi::Exceptions::InvalidSessionStateError
   end
 
-  describe '.login' do
+  describe '#login' do
     it 'should log-in' do
       expect(@session.state).to eq :started
     end
@@ -37,7 +37,7 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.logout' do
+  describe '#logout' do
     it 'should log out' do
       ::HttpMocking.enqueue_response(LOGOUT_SUCCESSFUL)
       @session.logout
@@ -51,7 +51,7 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.create_sending' do
+  describe '#create_sending' do
     it 'should handle successfull request' do
       ::HttpMocking.enqueue_response(CREATE_SENDING_SUCCESSFUL)
       res = @session.create_sending(SAMPLE_SENDING_REQUEST)
@@ -61,7 +61,7 @@ describe ::PickpointApi::Session do
   end
 
   [:track_sending, :sending_info].each do |m|
-    describe ".#{m}" do
+    describe "##{m}" do
       it 'should handle successfull request' do
         ::HttpMocking.enqueue_response({}.to_json)
         res = @session.send(m, '21121312')
@@ -70,7 +70,7 @@ describe ::PickpointApi::Session do
   end
 
   [:make_label, :make_zlabel, :make_reestr].each do |m|
-    describe ".#{m}" do
+    describe "##{m}" do
       it 'should handle successfull request' do
         ::HttpMocking.enqueue_response(PDF_SUCCESS)
         @session.send(m, '12345')
@@ -88,7 +88,7 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.city_list' do
+  describe '#city_list' do
     it 'should handle successfull request' do
       ::HttpMocking.enqueue_response(CITY_LIST_SUCCESS)
       res = @session.city_list
@@ -96,7 +96,7 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.get_states' do
+  describe '#get_states' do
     it 'should handle successfull request' do
       ::HttpMocking.enqueue_response(STATES_SUCCESS)
       res = @session.get_states
@@ -104,14 +104,14 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.postamat_list' do
+  describe '#postamat_list' do
     it 'should handle successfull request' do
       ::HttpMocking.enqueue_response({}.to_json)
       @session.postamat_list
     end
   end
 
-  describe '.get_zone' do
+  describe '#get_zone' do
     it 'should handle successfull request' do
       ::HttpMocking.enqueue_response(ZONES_SUCCESS)
       res = @session.get_zone('Some city', '7801-035')
@@ -119,7 +119,7 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.get_invoices_change_state' do
+  describe '#get_invoices_change_state' do
     it 'should handle successfull request' do
       ::HttpMocking.enqueue_response(GET_STATE_SUCCESS)
       res = @session.get_invoices_change_state(102, DateTime.parse('2014-01-01'), DateTime.parse('2014-03-01'))
@@ -127,7 +127,7 @@ describe ::PickpointApi::Session do
     end
   end
 
-  describe '.courier' do
+  describe '#courier' do
     it 'should handle successfull request' do
       ::HttpMocking.enqueue_response('{}')
       res = @session.courier({})

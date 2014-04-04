@@ -3,6 +3,8 @@
 # Editors files
 *.sublime-project
 *.sublime-workspace
+/.bundle
+/vendor
 
 # CTags indexes
 /.tags

@@ -97,9 +97,9 @@ class PickpointApi::Session
     action_path = "#{api_path}#{action_config[:path]}"
 
     if action_config[:method] == :post
-      req = ::Net::HTTP::Post.new action_path
+      req = ::Net::HTTP::Post.new(action_path)
     elsif action_config[:method] == :get
-      req = ::Net::HTTP::Get.new action_path
+      req = ::Net::HTTP::Get.new(action_path)
     end
 
     req.content_type = 'application/json'

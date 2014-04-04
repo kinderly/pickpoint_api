@@ -15,16 +15,28 @@ module PickpointApi
   end
 
   def self.session login, password, hash = {}
-    begin
-      session = Session.new hash
-      session.login login, password
-      yield session
-    rescue => ex
-      raise ::PickpointApi::Exceptions::ApiError, ex.message
-    ensure
-      if !session.nil? && session.state == :started
-        session.logout
+    session = Session.new hash
+    session.login(login, password)
+    if block_given?
+      begin
+        yield session
+      rescue => ex
+        raise ::PickpointApi::Exceptions::ApiError, ex.message
+      ensure
+        if !session.nil? && session.state == :started
+          session.logout
+        end
       end
+    else
+      session
+    end
+  end
+
+  def self.test_session(&block)
+    if block_given?
+      session('apitest', 'apitest', test: true, &block)
+    else
+      session('apitest', 'apitest', test: true)
     end
   end
 
