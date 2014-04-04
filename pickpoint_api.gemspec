@@ -1,4 +1,4 @@
-require_relative('./lib/pickpoint_api.rb')
+require File.expand_path("../lib/pickpoint_api/version", __FILE__)
 
 Gem::Specification.new do |s|
   s.name = "pickpoint_api"
