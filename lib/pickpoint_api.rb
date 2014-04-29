@@ -43,5 +43,6 @@ end
 require_relative('pickpoint_api/exceptions.rb')
 require_relative('pickpoint_api/constants.rb')
 require_relative('pickpoint_api/session.rb')
+require_relative('pickpoint_api/label.rb')
 
 

@@ -12,6 +12,9 @@ Gem::Specification.new do |s|
   s.license = "MIT"
 
   s.files = `git ls-files`.split("\n")
-  s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n")
+  s.test_files = `git ls-files -- {spec}/*`.split("\n")
   s.require_paths = ["lib"]
+
+  s.add_dependency('barby', '~>0.5')
+  s.add_dependency('chunky_png', '~>1.3')
 end

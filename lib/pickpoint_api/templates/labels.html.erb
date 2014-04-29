@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Ярлыки PickPoint</title>
+    <style>
+      @page {
+        margin: 0;
+      }
+
+      body {
+        width: 210mm;
+        font-family: Arial;
+        margin:2mm 0 0 0;
+        padding:0;
+      }
+
+      div {
+        overflow: hidden;
+      }
+
+      .label {
+        border: 0.5mm black solid;
+        float: left;
+        height: 55.3mm;
+        width: 98mm;
+        padding: 2mm 0 0 0;
+      }
+
+      p {
+        margin: 0;
+        padding: 0;
+      }
+
+      .postamat {
+        font-weight: bold;
+        height: 14mm;
+        text-align: center;
+      }
+
+      .postamat .minor {
+        font-size: 20pt;
+      }
+
+      .postamat .major {
+        font-size: 40pt;
+      }
+
+      .invoice_number{
+        font-weight: bold;
+      }
+
+      .logo{
+        width: 13mm;
+        height: 12mm;
+      }
+
+      .order_details{
+        font-size: 9pt;
+        float: left;
+        line-height: 100%;
+      }
+
+      .details{
+        width:90%;
+        margin: 0 auto 1mm auto;
+        height: 12mm;
+        padding: 1mm;
+      }
+
+      .c1{
+        width: 50%;
+        float: left;
+      }
+
+      .barcode{
+        text-align: center;
+      }
+
+      .literal{
+        letter-spacing:2mm;
+      }
+    </style>
+  </head>
+  <body>
+    <% @labels.each do |label| %>
+      <div class="label">
+        <div class="postamat">
+          <img class="logo" src="<%= label.pickpoint_logo_base_64 %>"/>
+          <span class="minor"><%= label.postamat_minor %></span>
+          <span class="major"><%= label.postamat_major %></span>
+        </div>
+        <div class="details">
+          <div class="c1">
+            <div class="client"><%= label.client_name %></div>
+            <div class="invoice_number"><%= label.invoice_number %></div>
+          </div>
+          <div class="order_details">
+            <p><%= label.inner_order_id %></p>
+            <p><%= label.name %></p>
+            <p>Тел. <%= label.phone %></p>
+            <p>Итого к оплате: <%= label.total.round(2) %>р</p>
+          </div>
+        </div>
+        <div class="barcode">
+          <p><img src='<%= label.barcode_base64 %>'/></p>
+          <p><span class="literal"><%= label.barcode %></span></p>
+        </div>
+      </div>
+    <% end %>
+  </body>
+</html>

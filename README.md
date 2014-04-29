@@ -84,3 +84,29 @@ session.logout
 ```
 
 Please refer to the official [Pickpoint](http://pickpoint.ru/) API documentation to learn about method meanings, expected request arguments, data format etc.
+
+### Rendering labels locally
+You can render Pickpoint labels in your own layout without sending a request to Pickpoint API. The labels are rendered in HTML format.
+```ruby
+label = PickpointApi::Label.new
+label.postamat_number = '1234-567'
+label.client_name = 'Horns & Hooves LTD'
+label.invoice_number = '1231231232'
+label.inner_order_id = '32167'
+label.name = 'John Doe'
+label.phone = '+790311111111'
+label.total = 3216.70
+label.barcode = 210000000000
+
+html = PickpointApi::Label.render(label)
+```
+
+You can also render several labels on one page:
+```ruby
+html = PickpointApi::Label.render([label1, label2, label3])
+```
+
+There's a built-in ERB template for rendering labels, but you can also provide your own:
+```ruby
+html = PickpointApi::Label.render(label, my_erb_string)
+```
