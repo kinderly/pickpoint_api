@@ -27,7 +27,8 @@ module PickpointApi::ApiActions
     data = {'SessionId' => @session_id}
     response = json_request(:logout, data)
 
-    if response['Success'] == true
+    if response['Success'] == true ||
+       (response['ErrorCode'].zero? && response['Error'].blank?)
       @state = :closed
       @session_id = nil
     else
