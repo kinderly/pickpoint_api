@@ -87,22 +87,10 @@ module PickpointApi::ApiActions
   end
 
   # Получение стоимости доставки
-  def get_delivery_cost(options)
+  def calc_tariff(data)
     ensure_session_state
-    raise_if_options_incorrect(options, :invoice_ids, :sender_invoice_numbers)
-
-    data = if !options[:invoice_ids].nil?
-      options[:invoice_ids].map do |invoice_id|
-        {'InvoiceNumber' => invoice_id}
-      end
-    elsif !options[:sender_invoice_numbers].nil?
-      options[:invoice_ids].map do |invoice_id|
-        {'SenderInvoiceNumber' => invoice_id}
-      end
-    end
-
-    data = attach_session_id('Sendings', data)
-    json_request(:get_delivery_cost, data)
+    res = json_request(:calc_tariff, data.merge('SessionId' => @session_id))
+    raise_if_error res
   end
 
   # Вызов курьера
